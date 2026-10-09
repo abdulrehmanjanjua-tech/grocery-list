@@ -21,8 +21,8 @@ li input{flex:none;width:22px;height:22px}
 <h1>🛒 Grocery List</h1>
 <div id="warn">Firebase set nahi hai — abhi list sirf is phone pe chal rahi hai. Neeche setup dekhein.</div>
 <div class="bar"><input id="t" placeholder="Cheez likhein (doodh, anda...)"><button onclick="add()">Add</button></div>
-<div class="bar"><button class="g" onclick="shareLink()">📲 WhatsApp pe code bhejo</button><button class="g" onclick="shareText()">📋 List bhejo</button></div>
-<div class="bar" style="align-items:center;font-size:14px">List code: <b id="code"></b><button class="g" onclick="chg()" style="margin-left:auto">Code badlo</button></div>
+<div class="bar"><button class="g" onclick="shareLink()">💬 Biwi ko code bhejo</button><button class="g" onclick="shareText()">📋 Biwi ko list bhejo</button></div>
+<div class="bar" style="align-items:center;font-size:14px">List code: <b id="code"></b><button class="g" onclick="setNum()" style="margin-left:auto">📞 Number</button><button class="g" onclick="chg()">Code badlo</button></div>
 <div id="cnt"></div>
 <ul id="l"></ul>
 
@@ -38,6 +38,8 @@ let id=(location.hash||'').slice(1);
 try{if(!id)id=localStorage.getItem('gid')||''}catch(e){}
 if(!id)id=Math.random().toString(36).slice(2,10);
 try{localStorage.setItem('gid',id)}catch(e){}
+function wa(t){let n='';try{n=(localStorage.getItem('wn')||'').replace(/\D/g,'')}catch(e){}open('https://wa.me/'+n+'?text='+encodeURIComponent(t))}
+function setNum(){const c=prompt('Biwi ka WhatsApp number (country code ke saath, jaise 923001234567):');if(c){try{localStorage.setItem('wn',c.trim())}catch(e){}alert('Number save ho gaya')}}
 function chg(){const c=prompt('Dusre phone wala list code daalein:');if(c&&c.trim()){try{localStorage.setItem('gid',c.trim())}catch(e){}location.hash=c.trim();location.reload()}}
 let items={},ref=null;
 const useFB=!!CFG.databaseURL;
@@ -59,8 +61,8 @@ function draw(){
   document.getElementById('l').innerHTML=ks.map(k=>`<li class="${items[k].done?'d':''}"><input type=checkbox ${items[k].done?'checked':''} onchange="tog('${k}')"><span>${esc(items[k].t)}</span><button class=x onclick="del('${k}')">✕</button></li>`).join('');
 }
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function shareLink(){open('https://wa.me/?text='+encodeURIComponent('Grocery app kholo, "Code badlo" dabao aur ye code daalo: '+id))}
+function shareLink(){wa('Grocery app kholo, "Code badlo" dabao aur ye code daalo: '+id)}
 function shareText(){const ks=Object.keys(items).sort((a,b)=>items[a].ts-items[b].ts);
-  open('https://wa.me/?text='+encodeURIComponent('🛒 Grocery list\n'+ks.map(k=>(items[k].done?'✅ ':'⬜ ')+items[k].t).join('\n')))}
+  wa('🛒 Grocery list\n'+ks.map(k=>(items[k].done?'✅ ':'⬜ ')+items[k].t).join('\n'))}
 document.getElementById('t').addEventListener('keydown',e=>{if(e.key==='Enter')add()});
 </script></body></html>
