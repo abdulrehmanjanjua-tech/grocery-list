@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ur"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grocery List</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f0f2f5;margin:0;padding:12px;max-width:480px;margin:auto}
+h1{font-size:20px;color:#075e54;margin:8px 0}
+.bar{display:flex;gap:6px;margin:8px 0}
+input{flex:1;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px}
+button{padding:10px 14px;border:0;border-radius:10px;background:#25d366;color:#fff;font-size:15px}
+button.g{background:#075e54}
+ul{list-style:none;padding:0}
+li{background:#fff;padding:12px;border-radius:10px;margin:6px 0;display:flex;align-items:center;gap:10px;font-size:17px}
+li.d span{text-decoration:line-through;color:#999}
+li span{flex:1}
+li input{flex:none;width:22px;height:22px}
+.x{background:none;color:#c00;padding:4px 8px}
+#warn{background:#fff3cd;padding:8px;border-radius:8px;font-size:13px;display:none}
+#cnt{font-size:13px;color:#555}
+</style></head><body>
+<h1>🛒 Grocery List</h1>
+<div id="warn">Firebase set nahi hai — abhi list sirf is phone pe chal rahi hai. Neeche setup dekhein.</div>
+<div class="bar"><input id="t" placeholder="Cheez likhein (doodh, anda...)"><button onclick="add()">Add</button></div>
+<div class="bar"><button class="g" onclick="shareLink()">📲 WhatsApp pe link bhejo</button><button class="g" onclick="shareText()">📋 List bhejo</button></div>
+<div id="cnt"></div>
+<ul id="l"></ul>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// === Yahan apni Firebase config paste karein (databaseURL zaroori hai) ===
+const CFG = {
+  databaseURL:"https://grocery-chcek-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+// ========================================================================
+let id=(location.hash||'').slice(1);
+if(!id){id=Math.random().toString(36).slice(2,10);location.hash=id}
+let items={},ref=null;
+const useFB=!!CFG.databaseURL;
+if(useFB){firebase.initializeApp(CFG);ref=firebase.database().ref('lists/'+id);
+  ref.on('value',s=>{items=s.val()||{};draw()})}
+else{document.getElementById('warn').style.display='block';
+  items=JSON.parse(localStorage.getItem('g'+id)||'{}');draw()}
+function save(){if(!useFB){localStorage.setItem('g'+id,JSON.stringify(items));draw()}}
+function add(){const i=document.getElementById('t'),v=i.value.trim();if(!v)return;i.value='';
+  const o={t:v,done:false,ts:Date.now()};
+  if(useFB)ref.push(o);else{items['k'+Date.now()]=o;save()}}
+function tog(k){if(useFB)ref.child(k).update({done:!items[k].done});else{items[k].done=!items[k].done;save()}}
+function del(k){if(useFB)ref.child(k).remove();else{delete items[k];save()}}
+function draw(){
+  const ks=Object.keys(items).sort((a,b)=>items[a].ts-items[b].ts);
+  const done=ks.filter(k=>items[k].done).length;
+  document.getElementById('cnt').textContent=ks.length?`✅ ${done} / ${ks.length} kharid liye`:'List khali hai';
+  document.getElementById('l').innerHTML=ks.map(k=>`<li class="${items[k].done?'d':''}"><input type=checkbox ${items[k].done?'checked':''} onchange="tog('${k}')"><span>${esc(items[k].t)}</span><button class=x onclick="del('${k}')">✕</button></li>`).join('');
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function shareLink(){open('https://wa.me/?text='+encodeURIComponent('Grocery list (live): '+location.href))}
+function shareText(){const ks=Object.keys(items).sort((a,b)=>items[a].ts-items[b].ts);
+  open('https://wa.me/?text='+encodeURIComponent('🛒 Grocery list\n'+ks.map(k=>(items[k].done?'✅ ':'⬜ ')+items[k].t).join('\n')))}
+document.getElementById('t').addEventListener('keydown',e=>{if(e.key==='Enter')add()});
+</script></body></html>
